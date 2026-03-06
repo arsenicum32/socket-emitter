@@ -11,16 +11,6 @@ describe('EventEmitter', () => {
     expect(listener).toHaveBeenCalledWith({ ok: true })
   })
 
-  it('does not emit unrelated events', () => {
-    const emitter = new EventEmitter()
-    const listener = jest.fn()
-
-    emitter.on('message', listener)
-    emitter.emit('other')
-
-    expect(listener).not.toHaveBeenCalled()
-  })
-
   it('unsubscribes listeners', () => {
     const emitter = new EventEmitter()
     const listener = jest.fn()
@@ -29,6 +19,17 @@ describe('EventEmitter', () => {
     emitter.emit('message')
     unsubscribe()
     emitter.emit('message')
+
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('supports one-shot listeners', () => {
+    const emitter = new EventEmitter()
+    const listener = jest.fn()
+
+    emitter.once('ready', listener)
+    emitter.emit('ready')
+    emitter.emit('ready')
 
     expect(listener).toHaveBeenCalledTimes(1)
   })

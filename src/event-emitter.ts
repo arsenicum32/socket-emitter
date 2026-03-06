@@ -22,4 +22,13 @@ export default class EventEmitter {
       this.listeners[name] = this.listeners[name].filter(cb => cb !== listener)
     }
   }
+
+  once<T = unknown>(name: string, listener: EventListener<T>): () => void {
+    const unsubscribe = this.on(name, (message?: T) => {
+      unsubscribe()
+      listener(message)
+    })
+
+    return unsubscribe
+  }
 }
