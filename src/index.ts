@@ -1,1 +1,1 @@
-export { default as EventEmitter } from './event-emitter'
+export { WsEmitter } from './ws-emitter'
