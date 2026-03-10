@@ -35,6 +35,14 @@ export class WsEmitter extends EventEmitter {
     this.socket.onopen = event => this.emit(OPEN_EVENT, event)
     this.socket.onclose = event => this.emit(CLOSE_EVENT, event)
     this.socket.onerror = event => this.emit(ERROR_EVENT, event)
-    this.socket.onmessage = event => this.emit(MESSAGE_EVENT, event.data)
+    this.socket.onmessage = event => {
+      const { data } = event
+
+      try {
+        this.emit(MESSAGE_EVENT, JSON.parse(data))
+      } catch {
+        this.emit(MESSAGE_EVENT, data)
+      }
+    }
   }
 }
