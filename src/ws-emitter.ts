@@ -45,4 +45,8 @@ export class WsEmitter extends EventEmitter {
       }
     }
   }
+
+  close(): void {
+    this.socket?.close()
+  }
 }
