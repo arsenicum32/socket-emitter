@@ -66,7 +66,17 @@ export class WsEmitter extends EventEmitter {
     }
   }
 
-  close(): void {
+  close(force = false): void {
+    if (force) {
+      const prevReconnectValue = this.options.autoReconnect
+
+      this.options.autoReconnect = false
+
+      this.once(CLOSE_EVENT, () => {
+        this.options.autoReconnect = prevReconnectValue
+      })
+    }
+
     this.socket?.close()
   }
 }
