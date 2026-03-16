@@ -51,12 +51,18 @@ export class WsEmitter extends EventEmitter {
 
   connect(): void {
     this.socket = new WebSocket(this.url)
+    this.socket.binaryType = 'blob'
 
     this.socket.onopen = event => this.emit(OPEN_EVENT, event)
     this.socket.onclose = event => this.emit(CLOSE_EVENT, event)
     this.socket.onerror = event => this.emit(ERROR_EVENT, event)
-    this.socket.onmessage = event => {
-      const { data } = event
+
+    this.socket.onmessage = async event => {
+      let { data } = event
+
+      if (typeof data !== 'string') {
+        data = await new Response(data).text()
+      }
 
       try {
         this.emit(MESSAGE_EVENT, JSON.parse(data))
