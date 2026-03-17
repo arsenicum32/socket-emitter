@@ -10,6 +10,9 @@
     "build": "tsc",
     "test": "jest"
   },
+  "dependencies": {
+    "msgpackr": "^1.11.2"
+  },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.12",

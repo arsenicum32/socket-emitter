@@ -1,3 +1,4 @@
+import { unpackMultiple } from 'msgpackr'
 import EventEmitter from './event-emitter'
 
 const CLOSE_EVENT = 'close'
@@ -20,14 +21,16 @@ const defaultOptions: Required<OptionsType> = {
 export class WsEmitter extends EventEmitter {
   private readonly url: string
   private readonly options: Required<OptionsType>
+  private readonly isMessagePack: boolean
   private reconnectTimeout = 0
 
   socket: WebSocket | undefined
 
-  constructor(url: string, options?: OptionsType) {
+  constructor(url: string, options?: OptionsType, isMessagePack = false) {
     super()
     this.url = url
     this.options = { ...defaultOptions, ...options }
+    this.isMessagePack = isMessagePack
 
     this.on(CLOSE_EVENT, () => {
       if (this.options.autoReconnect) {
@@ -61,11 +64,17 @@ export class WsEmitter extends EventEmitter {
       let { data } = event
 
       if (typeof data !== 'string') {
-        data = await new Response(data).text()
+        if (this.isMessagePack) {
+          const buffer = await data.arrayBuffer()
+          data = new Uint8Array(buffer)
+        } else {
+          data = await new Response(data).text()
+        }
       }
 
       try {
-        this.emit(MESSAGE_EVENT, JSON.parse(data))
+        const decoded = this.isMessagePack ? unpackMultiple(data) : JSON.parse(data)
+        this.emit(MESSAGE_EVENT, decoded)
       } catch {
         this.emit(MESSAGE_EVENT, data)
       }
