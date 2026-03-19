@@ -74,6 +74,12 @@ export class WsEmitter extends EventEmitter {
 
       try {
         const decoded = this.isMessagePack ? unpackMultiple(data) : JSON.parse(data)
+
+        if (Array.isArray(decoded)) {
+          decoded.forEach(item => this.emit(MESSAGE_EVENT, item))
+          return
+        }
+
         this.emit(MESSAGE_EVENT, decoded)
       } catch {
         this.emit(MESSAGE_EVENT, data)
