@@ -2,13 +2,13 @@
 
 Small TypeScript WebSocket infrastructure for applications that need predictable realtime behavior without adopting a full framework.
 
-`ws-emitter` wraps the native `WebSocket` API with a compact event-driven interface, explicit lifecycle control, defensive payload parsing, and configurable reconnect behavior. The goal is not to hide WebSocket, but to remove the repetitive glue code that usually grows around it in production UI, SDK, and service layers.
+`ws-emitter` wraps the native `WebSocket` API with a compact event-driven interface, explicit lifecycle control, defensive payload parsing, and configurable reconnect behavior. It is designed as low-level infrastructure: easy to inspect, easy to test, and small enough to embed inside UI applications, SDKs, or service-facing browser code.
 
 ## Why this exists
 
-Native WebSocket is intentionally low-level. That is fine for a prototype, but production code quickly needs decisions around lifecycle, reconnection, parsing, shutdown semantics, and subscription cleanup.
+Native WebSocket is intentionally low-level. That is useful for simple demos, but production code quickly needs the same decisions around lifecycle, reconnection, parsing, shutdown semantics, and subscription cleanup.
 
-This package turns those decisions into a small, inspectable abstraction:
+This package turns those decisions into a small, explicit abstraction:
 
 - one client object owns the socket lifecycle;
 - consumers subscribe through `on` / `once` and receive an unsubscribe function;
@@ -16,6 +16,8 @@ This package turns those decisions into a small, inspectable abstraction:
 - intentional closes can stop reconnects explicitly;
 - incoming payloads are normalized before they reach application code;
 - MessagePack support is opt-in instead of leaking binary protocol details into every consumer.
+
+The result is not a realtime framework. It is a focused transport primitive that keeps application code away from repetitive WebSocket glue while preserving the native model underneath.
 
 ## Highlights
 
@@ -83,6 +85,36 @@ socket.connect()
 socket.close(true)
 ```
 
+## Payload handling
+
+Incoming messages are decoded before they are emitted to consumers. The decoder is intentionally defensive: malformed JSON, unknown payload shapes, or unsupported binary data should not crash application listeners. When structured decoding is not possible, the original payload is forwarded.
+
+### JSON stream
+
+```ts
+const socket = new WsEmitter('wss://example.com/json-events')
+
+socket.on('message', (payload) => {
+  // payload is parsed JSON when the server sends valid JSON
+  console.log(payload)
+})
+```
+
+### MessagePack stream
+
+```ts
+const socket = new WsEmitter(
+  'wss://example.com/binary-events',
+  { autoReconnect: true },
+  true,
+)
+
+socket.on('message', (payload) => {
+  // payload is decoded through msgpackr when binary decoding is enabled
+  console.log(payload)
+})
+```
+
 ## API
 
 ### `new WsEmitter(url, options?, isMessagePack?)`
@@ -127,36 +159,6 @@ Subscribes to a single event delivery and removes the listener after the first c
 ### `emit(eventName, payload)`
 
 Triggers local listeners. This does not send data to the remote server.
-
-## Payload handling
-
-Incoming messages are decoded before they are emitted to consumers. The decoder is intentionally defensive: malformed JSON, unknown payload shapes, or unsupported binary data should not crash application listeners. When structured decoding is not possible, the original payload is forwarded.
-
-### JSON stream
-
-```ts
-const socket = new WsEmitter('wss://example.com/json-events')
-
-socket.on('message', (payload) => {
-  // payload is parsed JSON when the server sends valid JSON
-  console.log(payload)
-})
-```
-
-### MessagePack stream
-
-```ts
-const socket = new WsEmitter(
-  'wss://example.com/binary-events',
-  { autoReconnect: true },
-  true,
-)
-
-socket.on('message', (payload) => {
-  // payload is decoded through msgpackr when binary decoding is enabled
-  console.log(payload)
-})
-```
 
 ## Events
 
