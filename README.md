@@ -167,6 +167,29 @@ socket.on('message', (payload) => {
 | `error` | Native WebSocket error event |
 | `message` | Parsed JSON, decoded MessagePack object, or raw fallback |
 
+## Architecture
+
+```mermaid
+flowchart LR
+    Consumer[Application / SDK code] --> Client[WsEmitter]
+    Client --> Events[EventEmitter]
+    Client --> Socket[Native WebSocket]
+    Socket --> Lifecycle[open / close / error]
+    Socket --> Decoder[Payload decoder]
+    Decoder --> Message[message event]
+    Lifecycle --> Policy[Reconnect policy]
+    Policy --> Socket
+```
+
+## Design decisions
+
+- The package stays close to the native WebSocket model instead of inventing a custom realtime protocol.
+- `emit` is local-only by design; client-side events and transport writes are not mixed.
+- Reconnect is driven by close semantics, so explicit shutdown can be handled differently from a network drop.
+- Parsing failures are isolated from subscribers; consumers can decide what to do with raw fallback payloads.
+- MessagePack support is opt-in to keep the default JSON path simple and easy to debug.
+- The public API is intentionally small, which makes the client suitable as a lower-level primitive inside larger systems.
+
 ## Development
 
 ```bash
