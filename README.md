@@ -190,6 +190,30 @@ flowchart LR
 - MessagePack support is opt-in to keep the default JSON path simple and easy to debug.
 - The public API is intentionally small, which makes the client suitable as a lower-level primitive inside larger systems.
 
+## Production usage notes
+
+This library is best used as a transport primitive, not as an application state container. A typical production setup keeps domain-specific state elsewhere and uses `ws-emitter` only for connection lifecycle and incoming event delivery.
+
+Recommended patterns:
+
+- keep authentication and URL creation outside the client;
+- create one client per realtime stream or ownership boundary;
+- always store and call unsubscribe functions in UI code;
+- use `autoConnect: false` when connection order matters;
+- call `close(true)` for intentional teardown to avoid reconnect loops;
+- handle raw fallback payloads as part of the consumer contract.
+
+## Testing strategy
+
+The core behavior is tested around the parts that usually regress in WebSocket wrappers:
+
+- event subscription and unsubscription;
+- one-time listeners;
+- lifecycle event forwarding;
+- reconnect behavior after unexpected closes;
+- forced close behavior;
+- payload decoding paths.
+
 ## Development
 
 ```bash
