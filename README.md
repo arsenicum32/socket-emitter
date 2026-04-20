@@ -128,6 +128,36 @@ Subscribes to a single event delivery and removes the listener after the first c
 
 Triggers local listeners. This does not send data to the remote server.
 
+## Payload handling
+
+Incoming messages are decoded before they are emitted to consumers. The decoder is intentionally defensive: malformed JSON, unknown payload shapes, or unsupported binary data should not crash application listeners. When structured decoding is not possible, the original payload is forwarded.
+
+### JSON stream
+
+```ts
+const socket = new WsEmitter('wss://example.com/json-events')
+
+socket.on('message', (payload) => {
+  // payload is parsed JSON when the server sends valid JSON
+  console.log(payload)
+})
+```
+
+### MessagePack stream
+
+```ts
+const socket = new WsEmitter(
+  'wss://example.com/binary-events',
+  { autoReconnect: true },
+  true,
+)
+
+socket.on('message', (payload) => {
+  // payload is decoded through msgpackr when binary decoding is enabled
+  console.log(payload)
+})
+```
+
 ## Events
 
 | Event | Payload |
