@@ -222,6 +222,17 @@ npm test
 npm run build
 ```
 
+## Build output
+
+The package is built as a library artifact rather than an application bundle. The build produces distributable JavaScript and TypeScript declaration files under `dist`, so consumers get both runtime code and editor/type support.
+
+The intended package shape is:
+
+- source code in `src`;
+- tests close to the behavior they validate;
+- generated artifacts in `dist`;
+- a narrow public entry point for consumers.
+
 ## License
 
 MIT
