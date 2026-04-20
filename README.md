@@ -60,6 +60,29 @@ socket.on('close', () => {
 unsubscribe()
 ```
 
+## Lifecycle control
+
+Use the default mode when the client should connect as soon as it is created.
+
+```ts
+const socket = new WsEmitter('wss://example.com/events')
+```
+
+Use manual mode when connection timing belongs to the host application. This is useful in UI effects, SDK bootstrapping, integration tests, or flows where authentication must complete first.
+
+```ts
+const socket = new WsEmitter('wss://example.com/events', {
+  autoConnect: false,
+  autoReconnect: true,
+  reconnectTimeout: 1500,
+})
+
+socket.connect()
+
+// Intentional shutdown: this close should not schedule a reconnect.
+socket.close(true)
+```
+
 ## API
 
 ### `new WsEmitter(url, options?, isMessagePack?)`
